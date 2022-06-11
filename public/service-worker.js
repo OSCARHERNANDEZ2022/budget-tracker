@@ -6,7 +6,7 @@ const DATA_CACHE_NAME = "data-cache-" + VERSION;
 const FILES_TO_CACHE = [
   "./index.html",
   "./css/styles.css",
-  "./js/idb.js",
+  "./js/db.js",
   "./js/index.js",
   "./manifest.json",
   "./icons/icon-72x72.png",
@@ -19,9 +19,8 @@ const FILES_TO_CACHE = [
   "./icons/icon-512x512.png",
 ];
 
-// Cache resources
+// install
 self.addEventListener("install", function (event) {
-  // Perform install steps
   event.waitUntil(
     caches.open(CACHE_NAME).then(function (cache) {
       console.log("installing cache : " + CACHE_NAME);
@@ -30,9 +29,8 @@ self.addEventListener("install", function (event) {
   );
 });
 
-// Respond with cached resources
+// fetch
 self.addEventListener("fetch", function (event) {
-  // cache all get requests to /api routes
   if (event.request.url.includes("/api/")) {
     event.respondWith(
       caches
@@ -40,7 +38,6 @@ self.addEventListener("fetch", function (event) {
         .then((cache) => {
           return fetch(event.request)
             .then((response) => {
-              // If the response was good, clone it and store it in the cache.
               if (response.status === 200) {
                 cache.put(event.request.url, response.clone());
               }
@@ -48,7 +45,6 @@ self.addEventListener("fetch", function (event) {
               return response;
             })
             .catch((err) => {
-              // Network request failed, try to get it from the cache.
               return cache.match(event.request);
             });
         })
@@ -64,7 +60,6 @@ self.addEventListener("fetch", function (event) {
         if (response) {
           return response;
         } else if (event.request.headers.get("accept").includes("text/html")) {
-          // return the cached home page for all requests for html pages
           return caches.match("/");
         }
       });
@@ -72,12 +67,9 @@ self.addEventListener("fetch", function (event) {
   );
 });
 
-// Delete outdated caches
 self.addEventListener("activate", function (e) {
   e.waitUntil(
     caches.keys().then(function (keyList) {
-      // `keyList` contains all cache names under your username.github.io
-      // filter out ones that has this app prefix to create white list
       let cacheKeeplist = keyList.filter(function (key) {
         return key.indexOf(APP_PREFIX);
       });
